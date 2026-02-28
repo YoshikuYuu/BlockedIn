@@ -1,0 +1,26 @@
+{
+    "name": "Friction",
+    "description": "Make undesirable habits difficult to do.",
+    "version": "1.0",
+    "manifest_version": 3,
+    "action": {
+      "default_icon": "icon.jpg",
+      "default_title" : "CLICK ME",
+      "default_popup": "iframe.html"
+    },
+    "web_accessible_resources": [{
+      "resources": ["home.html", "iframe.html"],
+      "matches": ["<all_urls>"]
+    }],
+    "background": {
+      "service_worker": "background.js",
+      "type": "module"
+    },
+    "host_permissions": ["<all_urls>"],
+    "permissions": [
+      "scripting",
+      "tabs",
+      "activeTab",
+      "tabCapture"
+    ]
+}

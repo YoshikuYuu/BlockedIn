@@ -1,6 +1,6 @@
-chrome.runtime.onInstalled.addListener(() => {
-  console.log("Friction extension installed.");
-});
+// chrome.runtime.onInstalled.addListener(() => {
+//   console.log("Friction extension installed.");
+// });
 
 /**
  * Retrieves the URL of a Chrome tab by its ID.
@@ -21,11 +21,33 @@ function getTabUrl(tabId, callback) {
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    console.log("tab updated: " + tabId);
-    getTabUrl(tabId, (taburl) => {
-        console.log("tab updated url: " + taburl);
-        if (taburl) {
-            // send to backend
+  console.log("tab updated: " + tabId);
+  getTabUrl(tabId, (taburl) => {
+    console.log("tab updated url: " + taburl);
+    if (taburl) {
+      fetch("http://127.0.0.1:8000/checktab", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(taburl)
+      }) 
+      .then(res => res.json())
+      .then(data => {
+        const success = data.status === "success";
+        console[success ? "log" : "error"](data.msg || data);
+        chrome.runtime.sendMessage({
+          action: "updateUI",
+          status: success ? "success" : "error",
+          message: data.msg
+        });
+
+        if (success) {
+          //
         }
-    });
+      })
+      .catch(err => {
+        console.error("Error:", err);
+        //
+      });
+    }
+  });
 });

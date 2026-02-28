@@ -8,8 +8,9 @@
       "default_title" : "CLICK ME",
       "default_popup": "iframe.html"
     },
+    "options_page": "settings.html",
     "web_accessible_resources": [{
-      "resources": ["home.html", "iframe.html"],
+      "resources": ["settings.html", "iframe.html"],
       "matches": ["<all_urls>"]
     }],
     "background": {

@@ -19,26 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Main action button
   actionBtn.addEventListener("click", () => {
-    statusEl.textContent = "Running…";
-    actionBtn.disabled = true;
-
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs.length === 0) {
-        statusEl.textContent = "No active tab found.";
-        actionBtn.disabled = false;
-        return;
-      }
-
-      // Example: send a message to the content script
-      chrome.tabs.sendMessage(tabs[0].id, { action: "run" }, (response) => {
-        if (chrome.runtime.lastError) {
-          statusEl.textContent = "Error: " + chrome.runtime.lastError.message;
-        } else {
-          statusEl.textContent = response?.status ?? "Completed (no response)";
-        }
-        actionBtn.disabled = false;
-      });
-    });
+    chrome.runtime.openOptionsPage();
   });
 
   // Close button — closes the popup window

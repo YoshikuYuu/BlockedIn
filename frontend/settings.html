@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Blocked In Settings</title>
+        <link rel="stylesheet" href="settings.css">
+        <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+        </head>
+    <body>
+    <div class="container">
+        <h2>BLOCKED SITE SETTINGS</h2>
+
+        <div class="blin fade show" id="div1">
+            <label for="blockedInput">Add to Blocked List</label>
+            <span>Category Name</span>
+            <input type="text" id="blockedInputTitle" maxlength="50" placeholder="Example: All celebrities">
+            <div class="char-count">
+                <span id="charCountTitle">0</span> / 50
+            </div>
+            <span>Category Description</span>
+            <textarea 
+                id="blockedInputDesc" 
+                maxlength="500" 
+                rows="5" 
+                placeholder="Example: All celebrities"></textarea>
+            <div class="char-count">
+                <span id="charCountDesc">0</span> / 500
+            </div>
+            <div class="btnContainer">
+                <button class="contBtn" id="addBtn">Add ⟶</button>
+            </div>
+        </div>
+
+        <div id="div2" class="tagin fade">
+            Help us refine your category. Check fields you would like to keep, and X fields you would like to block.
+            <div id="tagContainer" class="tagContainer"></div>
+            <div class="btnContainer">
+                <button class="contBtn" id="doneBtn">Done ⟶</button>
+            </div>
+        </div>
+
+        <ul id="blockedList"></ul>
+    </div>
+    <script src="settings.js"></script>
+    </body>
+</html>

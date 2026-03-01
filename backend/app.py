@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from sentence_transformers import SentenceTransformer
 import torch
+import threading
+import time
 
 from category import Category, CategoryConfig, BLOCKMODE_STRICT, BLOCKMODE_WARN
 from gemini import ExampleGenerator
@@ -16,19 +18,6 @@ load_dotenv()
 elevenlabs = ElevenLabs(
   api_key=os.getenv("ELEVENLABS_API_KEY"),
 )
-
-# audio = elevenlabs.text_to_speech.convert(
-#     text="Maowww... I am a squoo. SquooberDASH. Hey, hello, welcome to Deerhacks",
-#     voice_id="Nggzl2QAXh3OijoXD116",
-#     model_id="eleven_monolingual_v1",
-#     output_format="mp3_44100_128",
-#     voice_settings=VoiceSettings(
-#         stability=0.5,
-#         similarity_boost=0.75,
-#         style=0.0,
-#         speed=0.7,
-#     ),
-# )
 
 app = Flask(__name__)
 CORS(app)
@@ -119,14 +108,33 @@ def checktab():
         msg = "No category match found."
         block_mode = "none"
 
+    threading.Thread(target=delayed_audio, daemon=True).start()
     return jsonify(
         {
             "status": "success",
             "msg": msg,
             "matched": bool(matched),
-            "blockMode": block_mode,
+            # "blockMode": block_mode,
+            'block_mode': "warn",
         }
     )
+
+def delayed_audio():
+    time.sleep(0.3)  # only blocks this thread
+
+    audio = elevenlabs.text_to_speech.convert(
+        text="Hey! Are you supposed to be on this page?",
+        voice_id="Nggzl2QAXh3OijoXD116",
+        model_id="eleven_monolingual_v1",
+        output_format="mp3_44100_128",
+        voice_settings=VoiceSettings(
+            stability=0.5,
+            similarity_boost=0.75,
+            style=0.0,
+            speed=0.7,
+        ),
+    )
+    play(audio)
 
 @app.route('/description', methods=['POST'])
 def description():

@@ -43,6 +43,75 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             if (data.blockMode === "strict") {
               console.log("Here REACHEHHEDHEDH")
               chrome.tabs.update(tabId, { url: chrome.runtime.getURL("blocked.html") });
+            } else if (data.block_mode === "warn") {
+              console.log("Warn REACHED in background.js :3")
+              chrome.scripting.executeScript({
+                target: { tabId: tabId },
+                func: function() {
+                  // Check if the iframe already exists
+                  const popup = document.createElement("div");
+                  popup.textContent = "Hey! Are you supposed to be on this page?";
+                  
+                  const popContainer = document.createElement("div");
+                  Object.assign(popContainer.style, {
+                    display: "flex",
+                    flexDirection: "row"
+                  })
+
+                  const blingirl = document.createElement("img");
+                  blingirl.src = chrome.runtime.getURL("./assets/blingirl-cropped.webp");
+                  Object.assign(blingirl.style, {
+                    height: "200px",
+                    width: "180px"
+                  })
+
+                  // Create Continue button
+                  const continueBtn = document.createElement("button");
+                  continueBtn.textContent = "Yes, continue ⟶";
+
+                  // Style button
+                  Object.assign(continueBtn.style, {
+                    height: "40px",
+                    marginTop: "15px",
+                    padding: "8px 14px",
+                    backgroundColor: "#eeede9",
+                    color: "#1b1b1b",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "16px"
+                  });
+
+                  // Close popup on click
+                  continueBtn.addEventListener("click", () => {
+                    popup.remove(); // removes it from the DOM
+                  });
+
+                  popContainer.appendChild(continueBtn);
+                  popContainer.appendChild(blingirl);
+                  popup.appendChild(popContainer)
+
+                  // Style it like a popup
+                  Object.assign(popup.style, {
+                    display: "flex",
+                    flexDirection: "column",
+                    position: "fixed",
+                    top: "20px",
+                    right: "20px",
+                    height: "150px",
+                    backgroundColor: "#1b1b1b",
+                    color: "#eeede9",
+                    padding: "20px",
+                    fontSize: "20px",
+                    fontFamily: "sans-serif",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                    zIndex: 999999
+                  });
+
+                  document.body.appendChild(popup);
+                }
+              });
             } else {
               console.log("Not reached")
             }

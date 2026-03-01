@@ -108,7 +108,7 @@ function addItem() {
                         positiveTags.add(str)
                     }
                     if (negativeTags.has(str)) {
-                        negativeTags.remove(str)
+                        negativeTags.delete(str)
                     }
                 });
                 noButton.addEventListener("click", () => {
@@ -120,7 +120,7 @@ function addItem() {
                         negativeTags.add(str)
                     }
                     if (positiveTags.has(str)) {
-                        positiveTags.remove(str)
+                        positiveTags.delete(str)
                     }
                 });
 
@@ -178,6 +178,7 @@ function doneItem() {
     titleCount.textContent = "0";
     descCount.textContent = "0";
     document.getElementById("choices").value = "strict";
+edIndex = 0;
 
     renderList();
 }
@@ -226,3 +227,4 @@ doneBtn.addEventListener("click", () => {
 });
 
 renderList();
+enderList();

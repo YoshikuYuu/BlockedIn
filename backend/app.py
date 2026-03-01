@@ -146,7 +146,7 @@ def tags():
     except KeyError:
         return jsonify({"status": "error", "msg": f"No category config found for name: {name}"}), 404
     
-    cfg.add_definitions(positive=positive_tags, negative=negative_tags)
+    cfg.update_definitions(positive=positive_tags, negative=negative_tags)
     category = Category(cfg, embed_fn=embedder.encode)
     blocklist_strict[name] = category
 

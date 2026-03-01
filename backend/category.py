@@ -18,21 +18,16 @@ class CategoryConfig:
                  initial_definition: str, 
                  block_mode: str):
         self.name = name
-        self.initial_definition = initial_definition
+        self.initial_definition = initial_definition.strip()
         self.block_mode = block_mode
         self.positive_definitions = [initial_definition]
         self.negative_definitions = []
 
-    def add_definitions(self, positive: List[str], negative: List[str]) -> None:
-        for text in positive:
-            cleaned = text.strip()
-            if cleaned and cleaned not in self.positive_definitions:
-                self.positive_definitions.append(cleaned)
-
-        for text in negative:
-            cleaned = text.strip()
-            if cleaned and cleaned not in self.negative_definitions:
-                self.negative_definitions.append(cleaned)
+    def update_definitions(self, positive: List[str], negative: List[str]) -> None:
+        self.positive_definitions = [text.strip() for text in positive if text.strip()]
+        self.negative_definitions = [text.strip() for text in negative if text.strip()]
+        if self.initial_definition not in self.positive_definitions:
+            self.positive_definitions = [self.initial_definition] + self.positive_definitions
 
 class Category:
     """A category of webpages defined by a simple semantic classifier.
@@ -51,6 +46,10 @@ class Category:
         self.config = cfg
         self.embed_fn = embed_fn
 
+        self._refresh_embeddings_and_thresholds()
+
+    def _refresh_embeddings_and_thresholds(self) -> None:
+
         pos_defs = self.config.positive_definitions
         neg_defs = self.config.negative_definitions
 
@@ -65,6 +64,10 @@ class Category:
         boundaries = max_member_similarities - max_negative_similarities 
         self.boundary = torch.quantile(boundaries, self.boundary_q).item()
         self.member_sim_th = torch.quantile(max_member_similarities, self.closeness_q).item()
+
+    def update_definitions(self, positive: List[str], negative: List[str]) -> None:
+        self.config.update_definitions(positive=positive, negative=negative)
+        self._refresh_embeddings_and_thresholds()
     
     def _get_max_member_similarities(self) -> torch.Tensor:
         """Computes the maximum cosine similarity for each positive embedding
@@ -86,11 +89,12 @@ class Category:
         """Computes the maximum cosine similarity of each positive embedding to the nearest negative embedding."""
         if not self.config.negative_definitions:
             return torch.zeros(len(self.config.positive_definitions))  # No negatives, so return 0 similarity
-        
+
         negative_similarities = F.cosine_similarity(
-            self.positive_embeddings, # (P, D)
-            self.negative_embeddings.T # (D, N)
-        ) # (P, N) matrix of cosine similarities to negatives
+            self.positive_embeddings.unsqueeze(1),  # (P, 1, D)
+            self.negative_embeddings.unsqueeze(0),  # (1, N, D)
+            dim=-1,
+        )  # (P, N) matrix of cosine similarities to negatives
         max_negative_similarities, _ = negative_similarities.max(dim=1)
         return max_negative_similarities
 

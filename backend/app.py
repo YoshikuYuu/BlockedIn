@@ -35,15 +35,15 @@ def _parse_checktab_payload(data):
         
 def _parse_description_payload(data):
     if isinstance(data, dict):
-        name, desc, block_mode = data.get("name"), data.get("desc"), data.get("blockType")
+        name, desc, block_mode = data.get("name"), data.get("desc"), data.get("blockMode")
         if not name or not desc or not block_mode:
-            raise ValueError("Description payload must include 'name', 'desc', and 'blockType' fields.")
+            raise ValueError("Description payload must include 'name', 'desc', and 'blockMode' fields.")
         if block_mode.strip() not in {BLOCKMODE_STRICT, BLOCKMODE_WARN}:
             raise ValueError(f"Invalid block mode: {block_mode}. Must be '{BLOCKMODE_STRICT}' or '{BLOCKMODE_WARN}'.")
         return {
             "name": name.strip(),
             "description": desc.strip(),
-            "block_mode": block_mode.strip(),
+            "blockMode": block_mode.strip(),
         }
     raise ValueError("Payload must be a JSON object.")
 
@@ -101,7 +101,7 @@ def checktab():
             "status": "success",
             "msg": msg,
             "matched": bool(matched),
-            "block_mode": block_mode,
+            "blockMode": block_mode,
         }
     )
 
@@ -110,7 +110,7 @@ def description():
     data = request.get_json(silent=True)
     try:
         payload = _parse_description_payload(data)
-        desc, name, block_mode = payload["description"], payload["name"], payload["block_mode"]
+        desc, name, block_mode = payload["description"], payload["name"], payload["blockMode"]
     except Exception as e:
         print(f"Error parsing description payload: {e}")
         return jsonify({"status": "error", "msg": "Invalid payload format."}), 400
@@ -148,10 +148,13 @@ def tags():
         cfg = configs[name]
     except KeyError:
         return jsonify({"status": "error", "msg": f"No category config found for name: {name}"}), 404
-    
+
     cfg.update_definitions(positive=positive_tags, negative=negative_tags)
     category = Category(cfg, embed_fn=embedder.encode)
-    blocklist_strict[name] = category
+    if cfg.block_mode == BLOCKMODE_STRICT:
+        blocklist_strict[name] = category
+    else:
+        blocklist_warn[name] = category
 
     return jsonify(
         {

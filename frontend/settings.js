@@ -1,7 +1,7 @@
 const inputDesc = document.getElementById("blockedInputDesc");
 const inputTitle = document.getElementById("blockedInputTitle");
 const addBtn = document.getElementById("addBtn");
-const doneBtn = document.getElementById("doneBtn")
+const doneBtn = document.getElementById("doneBtn");
 const blockedList = document.getElementById("blockedList");
 const container = document.getElementById("tagContainer");
 
@@ -11,7 +11,7 @@ let title = "";
 let desc = "";
 let blockMode = "strict";
 
-let blockedItems = JSON.parse(localStorage.getItem("blockedItems")) || {};
+let blockedItems = {};
 
 const titleCount = document.getElementById("charCountTitle");
 const descCount = document.getElementById("charCountDesc");
@@ -40,19 +40,61 @@ function renderList() {
         const removeBtn = document.createElement("button");
         removeBtn.textContent = "Remove";
         removeBtn.classList.add("remove-btn");
-        removeBtn.onclick = () => removeItem(key); // Use key instead of index
+        removeBtn.onclick = () => removeItem(key, item); // Use key instead of index
 
         li.appendChild(removeBtn);
         blockedList.appendChild(li);
     });
-
-    localStorage.setItem("blockedItems", JSON.stringify(blockedItems));
 }
 
 // Updated remove function for dictionary
-function removeItem(key) {
-    delete blockedItems[key];  // remove by key
-    renderList();               // re-render the list
+async function removeItem(key, item) {
+    try {
+        const res = await fetch("http://127.0.0.1:8000/config", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: key,
+                blockMode: item.blockMode || "strict",
+                listType: item.listType || "blocklist",
+            }),
+        });
+        const data = await res.json();
+        if (data.status !== "success") {
+            console.error(data.msg || data);
+            return;
+        }
+        await loadConfigs();
+    } catch (err) {
+        console.error("Error removing config:", err);
+    }
+}
+
+async function loadConfigs() {
+    try {
+        const res = await fetch("http://127.0.0.1:8000/configs");
+        const data = await res.json();
+        if (data.status !== "success") {
+            console.error(data.msg || data);
+            return;
+        }
+
+        blockedItems = {};
+        (data.configs || []).forEach((cfg) => {
+            if ((cfg.listType || "blocklist") !== "blocklist") return;
+            blockedItems[cfg.name] = {
+                desc: cfg.desc,
+                positiveTags: cfg.positiveTags || [],
+                negativeTags: cfg.negativeTags || [],
+                blockMode: cfg.blockMode || "strict",
+                listType: cfg.listType || "blocklist",
+            };
+        });
+
+        renderList();
+    } catch (err) {
+        console.error("Error loading configs:", err);
+    }
 }
 
 function addItem() {
@@ -60,7 +102,7 @@ function addItem() {
     desc = inputDesc.value.trim();
     blockMode = document.getElementById("choices").value || "strict";
 
-    const descPackage = { name: title, desc: desc, blockMode: blockMode }
+    const descPackage = { name: title, desc: desc, blockMode: blockMode };
 
 
     if (title === "" || desc === "") return;
@@ -140,20 +182,12 @@ function addItem() {
 }
 
 function doneItem() {
-    blockedItems[title] = {
-        desc: desc,
-        positiveTags: Array.from(positiveTags),
-        negativeTags: Array.from(negativeTags),
-        blockMode: blockMode
-    };
-
     const tabPackage = {
         name: title,
         desc: desc,
         positiveTags: Array.from(positiveTags),
         negativeTags: Array.from(negativeTags),
-        blockMode: blockMode,
-    }
+    };
 
     fetch("http://127.0.0.1:8000/tags", {
         method: "POST",
@@ -169,6 +203,9 @@ function doneItem() {
             status: success ? "success" : "error",
             message: data.tags
         });
+        if (success) {
+            loadConfigs();
+        }
     });
 
     inputTitle.value = "";
@@ -178,9 +215,9 @@ function doneItem() {
     titleCount.textContent = "0";
     descCount.textContent = "0";
     document.getElementById("choices").value = "strict";
-edIndex = 0;
 
-    renderList();
+    positiveTags = new Set();
+    negativeTags = new Set();
 }
 
 doneBtn.addEventListener("click", doneItem);
@@ -226,5 +263,4 @@ doneBtn.addEventListener("click", () => {
     fadeOut(div2);
 });
 
-renderList();
-enderList();
+loadConfigs();

@@ -121,19 +121,19 @@ def _parse_tags_payload(data):
 
 @app.route('/home', methods=['POST'])
 def home():
-    # audio = elevenlabs.text_to_speech.convert(
-    #     text="Hey there. Welcome to BlockedIn.",
-    #     voice_id="Nggzl2QAXh3OijoXD116",
-    #     model_id="eleven_monolingual_v1",
-    #     output_format="mp3_44100_128",
-    #     voice_settings=VoiceSettings(
-    #         stability=0.5,
-    #         similarity_boost=0.75,
-    #         style=0.0,
-    #         speed=0.7,
-    #     ),
-    # )
-    # play(audio)
+    audio = elevenlabs.text_to_speech.convert(
+        text="Hey there. Welcome to BlockedIn.",
+        voice_id="Nggzl2QAXh3OijoXD116",
+        model_id="eleven_monolingual_v1",
+        output_format="mp3_44100_128",
+        voice_settings=VoiceSettings(
+            stability=0.5,
+            similarity_boost=0.75,
+            style=0.0,
+            speed=0.7,
+        ),
+    )
+    play(audio)
     return jsonify({"status": "success"})
 
 

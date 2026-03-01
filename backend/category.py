@@ -42,7 +42,7 @@ class Category:
 
     def __init__(self,
                  cfg: CategoryConfig,
-                 embed_fn: Callable[[List[str]], torch.Tensor]):
+                 embed_fn: Callable[[List[str], bool], torch.Tensor]):
         self.config = cfg
         self.embed_fn = embed_fn
 
@@ -63,9 +63,9 @@ class Category:
         pos_defs = self.config.positive_definitions
         neg_defs = self.config.negative_definitions
 
-        self.positive_embeddings = self._as_tensor(self.embed_fn(pos_defs))
+        self.positive_embeddings = self._as_tensor(self.embed_fn(pos_defs, False))
         if neg_defs:
-            self.negative_embeddings = self._as_tensor(self.embed_fn(neg_defs))
+            self.negative_embeddings = self._as_tensor(self.embed_fn(neg_defs, False))
         else:
             self.negative_embeddings = torch.empty((0, self.positive_embeddings.size(-1)), dtype=torch.float32)
         
@@ -112,7 +112,7 @@ class Category:
 
     def matches(self, text: str) -> bool:
         """Checks if a given text is classified as inside the category."""
-        emb = self._as_tensor(self.embed_fn([text])).squeeze(0)
+        emb = self._as_tensor(self.embed_fn([text], True)).squeeze(0)
 
         max_pos_sim = F.cosine_similarity(
             emb, # (D,)

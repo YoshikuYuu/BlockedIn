@@ -20,20 +20,91 @@ function getTabInfo(tabId, callback) {
     });
 }
 
+function canExtractFromUrl(url) {
+  if (!url) return false;
+  return url.startsWith("http://") || url.startsWith("https://");
+}
+
+async function extractPageSemantics(tabId) {
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => {
+        const compact = (value) => (value || "").replace(/\s+/g, " ").trim();
+
+        const getMeta = (selectors) => {
+          for (const selector of selectors) {
+            const node = document.querySelector(selector);
+            const content = compact(node?.getAttribute("content") || "");
+            if (content) return content;
+          }
+          return "";
+        };
+
+        const title = compact(document.title);
+        const h1 = compact(document.querySelector("h1")?.textContent || "");
+
+        const headings = Array.from(document.querySelectorAll("h2, h3"))
+          .map((node) => compact(node.textContent || ""))
+          .filter(Boolean)
+          .slice(0, 6)
+          .join(" | ");
+
+        const snippet = Array.from(document.querySelectorAll("main p, article p, p"))
+          .map((node) => compact(node.textContent || ""))
+          .find((text) => text.length >= 40) || "";
+
+        const metaDescription = getMeta([
+          'meta[name="description"]',
+          'meta[property="og:description"]',
+          'meta[name="twitter:description"]',
+        ]);
+
+        const siteName = getMeta([
+          'meta[property="og:site_name"]',
+          'meta[name="application-name"]',
+        ]);
+
+        return { title, h1, headings, snippet, metaDescription, siteName };
+      },
+    });
+
+    return results?.[0]?.result || {};
+  } catch (error) {
+    console.debug("Semantic extraction skipped:", error);
+    return {};
+  }
+}
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status !== "complete") return;
   console.log("tab updated: " + tabId);
 
   getTabInfo(tabId, ({ url, title }) => {
+    (async () => {
     console.log("tab updated url:", url);
     console.log("tab updated title:", title);
 
     if (url) {
-      const tabInfo = {url: url, title: title};
+      let pageSemantics = {};
+      if (canExtractFromUrl(url)) {
+        pageSemantics = await extractPageSemantics(tabId);
+      }
+
+      const tabInfo = {
+        url: url,
+        title: title,
+        metaDescription: pageSemantics.metaDescription || "",
+        h1: pageSemantics.h1 || "",
+        headings: pageSemantics.headings || "",
+        snippet: pageSemantics.snippet || "",
+        siteName: pageSemantics.siteName || "",
+      };
+
       fetch("http://127.0.0.1:8000/checktab", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(tabInfo) // send both url and title
+          body: JSON.stringify(tabInfo)
       })
       .then(res => res.json())
       .then(data => {
@@ -122,5 +193,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
           // Optional: handle fetch error
       });
     }
+    })();
   });
 });

@@ -9,7 +9,7 @@ from pathlib import Path
 from category import Category, CategoryConfig, BLOCKMODE_STRICT, BLOCKMODE_WARN
 from config_store import ConfigStore, LISTTYPE_ALLOW, LISTTYPE_BLOCK
 from gemini import ExampleGenerator
-from utils import decompose_url
+from utils import build_embedding_input
 
 from dotenv import load_dotenv
 from elevenlabs.client import ElevenLabs
@@ -87,6 +87,11 @@ def _parse_checktab_payload(data):
         return {
             "url": url.strip(),
             "title": title.strip(),
+            "metaDescription": str(data.get("metaDescription", "")).strip(),
+            "h1": str(data.get("h1", "")).strip(),
+            "headings": str(data.get("headings", "")).strip(),
+            "snippet": str(data.get("snippet", "")).strip(),
+            "siteName": str(data.get("siteName", "")).strip(),
         }
     raise ValueError("Payload must be a JSON object.")
         
@@ -142,13 +147,11 @@ def checktab():
     data = request.get_json(silent=True)
     try:
         payload = _parse_checktab_payload(data)
-        url, title = payload["url"], payload["title"]
     except Exception as e:
         print(f"Error parsing checktab payload: {e}")
         return jsonify({"status": "error", "msg": "Invalid payload format."}), 400
 
-    url_text = " ".join(word for word in decompose_url(url) if word)
-    candidate_text = f"{title} {url_text}".strip()
+    candidate_text = build_embedding_input(payload, max_tokens=256)
 
     if not candidate_text:
         return jsonify({"status": "error", "msg": "Missing tab content."}), 400

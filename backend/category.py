@@ -1,9 +1,6 @@
-import re
 import torch
 import torch.nn.functional as F
-import numpy as np
-from sentence_transformers import SentenceTransformer
-from typing import List, Dict, Callable, Optional
+from typing import List, Callable
 
 BLOCKMODE_STRICT = "strict"
 BLOCKMODE_WARN = "warn"
@@ -25,6 +22,17 @@ class CategoryConfig:
         self.block_mode = block_mode
         self.positive_definitions = [initial_definition]
         self.negative_definitions = []
+
+    def add_definitions(self, positive: List[str], negative: List[str]) -> None:
+        for text in positive:
+            cleaned = text.strip()
+            if cleaned and cleaned not in self.positive_definitions:
+                self.positive_definitions.append(cleaned)
+
+        for text in negative:
+            cleaned = text.strip()
+            if cleaned and cleaned not in self.negative_definitions:
+                self.negative_definitions.append(cleaned)
 
 class Category:
     """A category of webpages defined by a simple semantic classifier.
@@ -86,7 +94,7 @@ class Category:
         max_negative_similarities, _ = negative_similarities.max(dim=1)
         return max_negative_similarities
 
-    def check_membership(self, text: str) -> bool:
+    def matches(self, text: str) -> bool:
         """Checks if a given text is classified as inside the category."""
         emb = self.embed_fn([text]).squeeze()
 
@@ -104,9 +112,4 @@ class Category:
         
         sim_diff = max_pos_sim - max_neg_sim
         return (max_pos_sim >= self.member_sim_th) and (sim_diff >= self.boundary)
-    
-def decompose_url(url: str) -> list[str]:
-    """Decomposes a URL into alphanumeric components for embedding."""
-    url = url.replace("http://", "").replace("https://", "")
-    components = re.split(r'\W', url)
-    return components
+

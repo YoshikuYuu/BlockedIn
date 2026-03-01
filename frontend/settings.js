@@ -9,7 +9,7 @@ let positiveTags = new Set();
 let negativeTags = new Set();
 let title = "";
 let desc = "";
-let blockType = "";
+let blockMode = "strict";
 
 let blockedItems = JSON.parse(localStorage.getItem("blockedItems")) || {};
 
@@ -58,9 +58,9 @@ function removeItem(key) {
 function addItem() {
     title = inputTitle.value.trim();
     desc = inputDesc.value.trim();
-    blockType = document.getElementById("choices").value;
+    blockMode = document.getElementById("choices").value || "strict";
 
-    const descPackage = { name: title, desc: desc, blockType: blockType }
+    const descPackage = { name: title, desc: desc, blockMode: blockMode }
 
 
     if (title === "" || desc === "") return;
@@ -144,10 +144,16 @@ function doneItem() {
         desc: desc,
         positiveTags: Array.from(positiveTags),
         negativeTags: Array.from(negativeTags),
-        blockType: blockType
+        blockMode: blockMode
     };
 
-    const tabPackage = { name: title, desc: desc, positiveTags: Array.from(positiveTags), negativeTags: Array.from(negativeTags), blockType: blockType }
+    const tabPackage = {
+        name: title,
+        desc: desc,
+        positiveTags: Array.from(positiveTags),
+        negativeTags: Array.from(negativeTags),
+        blockMode: blockMode,
+    }
 
     fetch("http://127.0.0.1:8000/tags", {
         method: "POST",
@@ -171,7 +177,7 @@ function doneItem() {
 
     titleCount.textContent = "0";
     descCount.textContent = "0";
-    document.getElementById("choices").selectedIndex = 0;
+    document.getElementById("choices").value = "strict";
 
     renderList();
 }

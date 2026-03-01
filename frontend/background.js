@@ -40,7 +40,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         const success = data.status === "success";
         console[success ? "log" : "error"](data.msg || data);
         if (success) {
-            if (data.block_mode === "strict") {
+            if (data.blockMode === "strict") {
               console.log("Here REACHEHHEDHEDH")
               chrome.tabs.update(tabId, { url: chrome.runtime.getURL("blocked.html") });
             } else {

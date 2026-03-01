@@ -108,14 +108,14 @@ def checktab():
         msg = "No category match found."
         block_mode = "none"
 
-    threading.Thread(target=delayed_audio, daemon=True).start()
+    # threading.Thread(target=delayed_audi
+    # o, daemon=True).start()
     return jsonify(
         {
             "status": "success",
             "msg": msg,
             "matched": bool(matched),
-            # "blockMode": block_mode,
-            'block_mode': "warn",
+            "blockMode": block_mode,
         }
     )
 

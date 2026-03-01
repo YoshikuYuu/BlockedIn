@@ -137,6 +137,7 @@ def checktab():
             "msg": msg,
             "matched": bool(matched),
             "blockMode": block_mode,
+            # "blockMode": "warn",
         }
     )
 

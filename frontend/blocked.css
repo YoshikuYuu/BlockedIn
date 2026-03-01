@@ -1,7 +1,23 @@
 body {
     background-color: #1b1b1b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 30px;
 }
 
 .content {
     height: 80vh;
+    width: 52vw;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.contentText {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    color: #eeede9;
+    font-size: 40px;
+    display: flex;
+    text-align: center;
 }

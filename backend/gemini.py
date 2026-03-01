@@ -23,15 +23,14 @@ class ExampleGenerator:
 
         min_cases, max_cases = 3, 6
         prompt = (
-            "You are helping define the boundary of a semantic category that will be used to describe websites.\n"
-            "Category description:\n"
+            "You are helping define the boundary of a semantic category that will be used to describe websites that the user wants to block.\n"
+            "User-provided category description:\n"
             f"\"\"\"{category_description.strip()}\"\"\"\n"
-            f"Task: Generate {min_cases} to {max_cases} DISTINCT borderline cases. Each case should:\n"
-            "Be ambiguous or edge-case\n"
-            "- Possibly belong to the category, but not clearly\n"
-            "- Be realistic (e.g. webpage topics, titles, short descriptions)\n"
-            "- Not be obvious examples or clear negatives\n"
-            "Return ONLY a JSON array of short strings. No explanation."
+            f"Task: Generate {min_cases} to {max_cases} DISTINCT semantically related categories. These categories should:\n"
+            "- Cover related categories that overlap semantically (including subset/superset relationships) with the user's category"
+            "- Cover categories that possibly fall under the user provided category, but not clearly\n"
+            "- Be realistic and appropriate in scope (i.e. if the user's category is very broad, your suggestions should be roughly similar in breadth)\n"
+            "Return ONLY a JSON array of short strings describing your suggested categories. Each string should be no longer than 10 words. No explanation."
         )
 
         response = self.client.models.generate_content(

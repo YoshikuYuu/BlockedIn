@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 # The client gets the API key from the environment variable `GEMINI_API_KEY`.
 
-class ExampleGenerator:
+class Gemini:
     def __init__(self):
         load_dotenv()
         try:
@@ -61,7 +61,7 @@ class ExampleGenerator:
         normalized = [item.strip() for item in data if isinstance(item, str) and item.strip()]
         return normalized
 
-    def generate_probe_dataset(self, cfg: "CategoryConfig", n: int = 200) -> dict[str, List[str]]:
+    def generate_binary_dataset(self, cfg: "CategoryConfig", n: int = 200) -> dict[str, List[str]]:
         if n < 2 or n % 2 != 0:
             raise ValueError("n must be an even integer >= 2.")
 
@@ -69,7 +69,8 @@ class ExampleGenerator:
         prompt = (
             "You are generating synthetic supervised fine-tuning data for a linear probe classifier over text embeddings.\n"
             "The classifier should detect whether web queries/page titles belong to a target category.\n"
-            "Generate highly varied, diverse, realistic, and boundary-aware examples.\n"
+            "Generate highly varied, diverse, realistic, and boundary-aware examples. Focus especially on ambiguous and/or tricky cases.\n"
+            "E.g. an 'animal' category should include 'mouse' but not a 'computer mouse'.\n"
             "Include people, products, search queries, slang, short phrases, entities, and web page title-like strings.\n"
             "Avoid duplicates and avoid near-duplicates.\n"
             "Category name:\n"

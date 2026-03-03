@@ -7,22 +7,20 @@ import time
 import json
 from pathlib import Path
 import re
-import importlib
 from typing import Any
 
 from category import CategoryConfig, BLOCKMODE_STRICT, BLOCKMODE_WARN
+from categoryclassifier import CategoryClassifier
 from config_store import ConfigStore, LISTTYPE_ALLOW, LISTTYPE_BLOCK
 import voice
-from gemini import ExampleGenerator
+from gemini import Gemini
 from utils import decompose_url
-
-CategoryClassifier = importlib.import_module("categoryclassifier").CategoryClassifier
 
 app = Flask(__name__)
 CORS(app)
 
 embedder = SentenceTransformer("Snowflake/snowflake-arctic-embed-xs")
-example_generator = ExampleGenerator()
+example_generator = Gemini()
 
 def embedding_fn(texts: list[str], query: bool) -> torch.Tensor:
     if query:
@@ -102,7 +100,7 @@ def _train_and_attach_classifier(
     list_type: str,
     epochs: int = 8,
 ) -> tuple[Any, dict]:
-    dataset = example_generator.generate_probe_dataset(cfg, n=200)
+    dataset = example_generator.generate_binary_dataset(cfg, n=200)
     dataset_path = _write_probe_dataset_json(cfg=cfg, list_type=list_type, dataset=dataset)
     classifier = CategoryClassifier(cfg=cfg, embed_fn=embedding_fn)
     train_result = classifier.train_probe(
@@ -153,7 +151,7 @@ def _rebuild_runtime_from_store() -> None:
         else:
             try:
                 print(f"Probe missing for category '{name}'. Training a new probe...")
-                dataset = example_generator.generate_probe_dataset(cfg, n=200)
+                dataset = example_generator.generate_binary_dataset(cfg, n=200)
                 _write_probe_dataset_json(cfg=cfg, list_type=list_type, dataset=dataset)
                 classifier.train_probe(
                     positive_texts=dataset["positive"],
